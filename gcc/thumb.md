@@ -820,6 +820,26 @@
   ""
   "cmp\\t%0, #0")
 
+(define_insn "*andsi3_tst"
+  [(set (cc0)
+	(and:SI (match_operand:SI 0 "s_register_operand" "l")
+		(match_operand:SI 1 "s_register_operand" "l")))]
+  "flag_tst"
+  "tst\\t%1, %0")
+
+;; Thumb AND always sets flags. When the AND result is live AND flags are
+;; needed, the combiner produces a PARALLEL. This pattern eliminates the
+;; redundant cmp after and by using the implicit flag-setting of Thumb AND.
+(define_insn "*andsi3_setflags"
+  [(parallel
+    [(set (cc0)
+	  (and:SI (match_operand:SI 1 "s_register_operand" "%0")
+		  (match_operand:SI 2 "s_register_operand" "l")))
+     (set (match_operand:SI 0 "s_register_operand" "=l")
+	  (and:SI (match_dup 1) (match_dup 2)))])]
+  "flag_tst"
+  "and\\t%0, %0, %2")
+
 (define_insn "cmnsi"
   [(set (cc0) (compare (match_operand:SI 0 "s_register_operand" "l")
 		       (neg:SI (match_operand:SI 1 "s_register_operand" "l"))))]
