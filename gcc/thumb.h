@@ -33,8 +33,8 @@ Boston, MA 02111-1307, USA.  */
    reload.  These should be eliminated if possible by tightening the
    predicates and/or constraints.  This will give faster/smaller code.  */
 
-/* ??? There is no pattern for the TST instuction.  Check for other unsupported
-   instructions.  */
+/* The TST instruction is emitted via the *andsi3_tst pattern in thumb.md.
+   Check for other unsupported instructions.  */
 
 #define TARGET_VERSION  fputs (" (ARM/THUMB:generic)", stderr);
 

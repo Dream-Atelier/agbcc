@@ -591,6 +591,9 @@ int flag_fixed_debug_line_info = 0;
 /* Fix prologue bug in new compiler.  */
 int flag_prologue_bugfix = 0;
 
+/* Use TST instruction instead of AND+CMP for bitwise flag tests.  */
+int flag_tst = 0;
+
 typedef struct
 {
     char *string;
@@ -739,6 +742,8 @@ lang_independent_options f_options[] =
     {"prologue-bugfix", &flag_prologue_bugfix, 1,
      "Prevent unnecessary saving of the lr register to the stack"},
 #endif
+    {"tst", &flag_tst, 1,
+     "Use TST instruction instead of AND+CMP for bitwise flag tests"},
 };
 
 #define NUM_ELEM(a)  (sizeof (a) / sizeof ((a)[0]))
