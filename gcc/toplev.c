@@ -594,6 +594,9 @@ int flag_prologue_bugfix = 0;
 /* Use TST instruction instead of AND+CMP for bitwise flag tests.  */
 int flag_tst = 0;
 
+/* Eliminate redundant cmp after flag-setting data-processing instructions.  */
+int flag_cmp_elim = 0;
+
 typedef struct
 {
     char *string;
@@ -744,6 +747,8 @@ lang_independent_options f_options[] =
 #endif
     {"tst", &flag_tst, 1,
      "Use TST instruction instead of AND+CMP for bitwise flag tests"},
+    {"cmp-elim", &flag_cmp_elim, 1,
+     "Eliminate redundant cmp after flag-setting instructions"},
 };
 
 #define NUM_ELEM(a)  (sizeof (a) / sizeof ((a)[0]))

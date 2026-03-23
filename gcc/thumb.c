@@ -1571,7 +1571,7 @@ thumb_notice_update_cc (exp, insn)
   if (get_attr_conds (insn) == CONDS_UNCHANGED)
     return;
 
-  if (flag_tst
+  if ((flag_tst || flag_cmp_elim)
       && GET_CODE (exp) == SET
       && GET_CODE (SET_DEST (exp)) == REG
       && REGNO (SET_DEST (exp)) < 8)

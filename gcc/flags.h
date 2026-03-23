@@ -460,3 +460,6 @@ extern int flag_prologue_bugfix;
 
 /* Nonzero if the TST instruction should be used instead of AND+CMP.  */
 extern int flag_tst;
+
+/* Nonzero if redundant cmp after flag-setting insns should be eliminated.  */
+extern int flag_cmp_elim;
