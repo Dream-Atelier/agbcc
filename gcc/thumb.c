@@ -35,6 +35,7 @@
 #include "expr.h"
 #include "toplev.h"
 #include "recog.h"
+#include "conditions.h"
 
 int current_function_anonymous_args = 0;
 
@@ -1556,4 +1557,43 @@ s_register_operand(rtx op, enum machine_mode mode)
 #else
     return register_operand(op, mode);
 #endif
+}
+
+/* Update cc_status after an instruction that may set condition codes.
+   When -ftst is enabled, track that Thumb data-processing instructions
+   (AND, ORR, EOR, etc.) set N and Z flags based on the result, making
+   a subsequent "cmp Rd, #0" redundant.  */
+void
+thumb_notice_update_cc (exp, insn)
+     rtx exp;
+     rtx insn;
+{
+  if (get_attr_conds (insn) == CONDS_UNCHANGED)
+    return;
+
+  if (flag_tst
+      && GET_CODE (exp) == SET
+      && GET_CODE (SET_DEST (exp)) == REG
+      && REGNO (SET_DEST (exp)) < 8)
+    {
+      rtx src = SET_SRC (exp);
+      enum rtx_code code = GET_CODE (src);
+
+      /* Thumb data-processing instructions that set N and Z flags
+         based on the result register.  A subsequent compare against
+         zero is redundant.  */
+      if (code == AND || code == IOR || code == XOR
+          || code == NOT || code == NEG
+          || code == ASHIFT || code == ASHIFTRT || code == LSHIFTRT
+          || code == ROTATERT || code == MULT)
+        {
+          cc_status.flags = CC_NO_OVERFLOW;
+          cc_status.value1 = gen_rtx (COMPARE, VOIDmode,
+                                      SET_DEST (exp), const0_rtx);
+          cc_status.value2 = SET_DEST (exp);
+          return;
+        }
+    }
+
+  CC_STATUS_INIT;
 }

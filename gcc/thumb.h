@@ -933,11 +933,9 @@ int thumb_shiftable_const ();
 
 /* Condition Code Status */
 
-#define NOTICE_UPDATE_CC(EXP,INSN)			\
-{							\
-  if (get_attr_conds ((INSN)) != CONDS_UNCHANGED)	\
-    CC_STATUS_INIT;					\
-}
+extern void thumb_notice_update_cc ();
+
+#define NOTICE_UPDATE_CC(EXP,INSN) thumb_notice_update_cc ((EXP), (INSN))
 
 
 /* Describing Relative Costs of Operations */
