@@ -597,6 +597,9 @@ int flag_tst = 0;
 /* Eliminate redundant cmp after flag-setting data-processing instructions.  */
 int flag_cmp_elim = 0;
 
+/* Use signed branches (bgt/blt) instead of unsigned (bhi/blo) for compares.  */
+int flag_signed_compare = 0;
+
 typedef struct
 {
     char *string;
@@ -749,6 +752,8 @@ lang_independent_options f_options[] =
      "Use TST instruction instead of AND+CMP for bitwise flag tests"},
     {"cmp-elim", &flag_cmp_elim, 1,
      "Eliminate redundant cmp after flag-setting instructions"},
+    {"signed-compare", &flag_signed_compare, 1,
+     "Use signed branches (bgt/blt) instead of unsigned (bhi/blo)"},
 };
 
 #define NUM_ELEM(a)  (sizeof (a) / sizeof ((a)[0]))

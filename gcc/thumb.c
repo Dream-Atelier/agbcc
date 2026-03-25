@@ -1315,10 +1315,10 @@ thumb_condition_code(rtx x, int invert)
     {
     case EQ: val = 0; break;
     case NE: val = 1; break;
-    case GEU: val = 2; break;
-    case LTU: val = 3; break;
-    case GTU: val = 8; break;
-    case LEU: val = 9; break;
+    case GEU: val = flag_signed_compare ? 10 : 2; break;
+    case LTU: val = flag_signed_compare ? 11 : 3; break;
+    case GTU: val = flag_signed_compare ? 12 : 8; break;
+    case LEU: val = flag_signed_compare ? 13 : 9; break;
     case GE: val = 10; break;
     case LT: val = 11; break;
     case GT: val = 12; break;

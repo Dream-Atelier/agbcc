@@ -463,3 +463,6 @@ extern int flag_tst;
 
 /* Nonzero if redundant cmp after flag-setting insns should be eliminated.  */
 extern int flag_cmp_elim;
+
+/* Nonzero if unsigned branches should use signed equivalents.  */
+extern int flag_signed_compare;
