@@ -466,3 +466,6 @@ extern int flag_cmp_elim;
 
 /* Nonzero if unsigned branches should use signed equivalents.  */
 extern int flag_signed_compare;
+
+/* Nonzero to suppress folding of large address + offset constants.  */
+extern int flag_no_fold_addr;

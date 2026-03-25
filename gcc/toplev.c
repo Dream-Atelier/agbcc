@@ -600,6 +600,8 @@ int flag_cmp_elim = 0;
 /* Use signed branches (bgt/blt) instead of unsigned (bhi/blo) for compares.  */
 int flag_signed_compare = 0;
 
+int flag_no_fold_addr = 0;
+
 typedef struct
 {
     char *string;
@@ -754,6 +756,8 @@ lang_independent_options f_options[] =
      "Eliminate redundant cmp after flag-setting instructions"},
     {"signed-compare", &flag_signed_compare, 1,
      "Use signed branches (bgt/blt) instead of unsigned (bhi/blo)"},
+    {"no-fold-addr", &flag_no_fold_addr, 1,
+     "Don't fold base_address + offset into a single constant"},
 };
 
 #define NUM_ELEM(a)  (sizeof (a) / sizeof ((a)[0]))

@@ -3971,6 +3971,13 @@ simplify_binary_operation (code, mode, op0, op1)
   switch (code)
     {
     case PLUS:
+      /* When -fno-fold-addr, don't fold base_addr + offset when one operand
+	 looks like a GBA RAM/IO address (>= 0x02000000) and the other is
+	 non-zero.  This preserves base+offset form for Thumb codegen.  */
+      if (flag_no_fold_addr
+	  && ((arg0s >= 0x02000000 && arg1s != 0)
+	      || (arg1s >= 0x02000000 && arg0s != 0)))
+	return 0;
       val = arg0s + arg1s;
       break;
 
