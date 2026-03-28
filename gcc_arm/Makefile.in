@@ -531,7 +531,7 @@ HOST_PRINT = $(HOST_PREFIX)print-rtl.o
 # Both . and srcdir are used, in that order,
 # so that tm.h and config.h will be found in the compilation
 # subdirectory rather than in the source directory.
-INCLUDES = -I. -I$(srcdir) -I$(srcdir)/config -I$(srcdir)/../include
+INCLUDES = -I. -I$(srcdir) -I$(srcdir)/config -idirafter $(srcdir)/../include
 
 # Always use -I$(srcdir)/config when compiling.
 .c.o:
