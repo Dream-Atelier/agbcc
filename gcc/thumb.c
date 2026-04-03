@@ -441,57 +441,6 @@ thumb_reorg(rtx first)
             dump_table(barrier);
         }
     }
-
-    /* When -fcaller-saved-preference is active, swap adjacent insns where
-       an arithmetic operation (add/sub with immediate) precedes a memory
-       load and they are independent.  This matches the original compiler's
-       instruction ordering.  */
-    if (flag_caller_saved_preference)
-    {
-        for (insn = first; insn; insn = NEXT_INSN(insn))
-        {
-            rtx next;
-            if (GET_CODE(insn) != INSN)
-                continue;
-            next = next_real_insn(insn);
-            if (next == 0 || GET_CODE(next) != INSN)
-                continue;
-
-            /* Check: insn is (set (reg A) (plus (reg A) (const_int)))
-               next is (set (reg B) (mem ...))
-               and A != B and A is not used in next's address */
-            {
-                rtx pat1 = PATTERN(insn);
-                rtx pat2 = PATTERN(next);
-
-                if (GET_CODE(pat1) == SET && GET_CODE(pat2) == SET
-                    && GET_CODE(SET_DEST(pat1)) == REG
-                    && GET_CODE(SET_DEST(pat2)) == REG
-                    && GET_CODE(SET_SRC(pat1)) == PLUS
-                    && GET_CODE(XEXP(SET_SRC(pat1), 1)) == CONST_INT
-                    && INTVAL(XEXP(SET_SRC(pat1), 1)) < 0
-                    && GET_CODE(XEXP(SET_SRC(pat1), 0)) == REG
-                    && REGNO(XEXP(SET_SRC(pat1), 0)) == REGNO(SET_DEST(pat1))
-                    && GET_CODE(SET_SRC(pat2)) == MEM
-                    && GET_MODE(SET_SRC(pat2)) == QImode
-                    && REGNO(SET_DEST(pat1)) != REGNO(SET_DEST(pat2))
-                    && !reg_mentioned_p(SET_DEST(pat1), SET_SRC(pat2)))
-                {
-                    /* Swap: put the memory load before the arithmetic.  */
-                    rtx prev = PREV_INSN(insn);
-                    rtx after_next = NEXT_INSN(next);
-
-                    NEXT_INSN(prev) = next;
-                    PREV_INSN(next) = prev;
-                    NEXT_INSN(next) = insn;
-                    PREV_INSN(insn) = next;
-                    NEXT_INSN(insn) = after_next;
-                    if (after_next)
-                        PREV_INSN(after_next) = insn;
-                }
-            }
-        }
-    }
 }
 
 /* Routines for generating rtl */

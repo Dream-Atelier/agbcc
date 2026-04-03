@@ -602,8 +602,6 @@ int flag_signed_compare = 0;
 
 int flag_no_fold_addr = 0;
 
-int flag_caller_saved_preference = 0;
-
 typedef struct
 {
     char *string;
@@ -760,8 +758,6 @@ lang_independent_options f_options[] =
      "Use signed branches (bgt/blt) instead of unsigned (bhi/blo)"},
     {"no-fold-addr", &flag_no_fold_addr, 1,
      "Don't fold base_address + offset into a single constant"},
-    {"caller-saved-preference", &flag_caller_saved_preference, 1,
-     "Prefer caller-saved regs for pseudos not crossing calls"},
 };
 
 #define NUM_ELEM(a)  (sizeof (a) / sizeof ((a)[0]))

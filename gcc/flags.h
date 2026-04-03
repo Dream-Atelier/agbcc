@@ -469,7 +469,3 @@ extern int flag_signed_compare;
 
 /* Nonzero to suppress folding of large address + offset constants.  */
 extern int flag_no_fold_addr;
-
-/* Nonzero to prefer caller-saved registers for pseudos not crossing calls,
-   and avoid reusing register-asm-pinned hard registers.  */
-extern int flag_caller_saved_preference;
