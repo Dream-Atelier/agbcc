@@ -1404,7 +1404,12 @@ final_scan_insn (insn, file, optimize, prescan, nopeepholes)
 	}
 #endif
 
-      if (write_symbols == NO_DEBUG)
+      /* When no debug info is requested, the original code breaks out of
+	 the NOTE case here, which skips line-number processing entirely.
+	 The agent instrumentation flags need that processing to fire so
+	 that line-number notes drive output_source_line below, hence the
+	 extra `&& !flag_src_locs && !flag_reg_lifetimes' guard.  */
+      if (write_symbols == NO_DEBUG && !flag_src_locs && !flag_reg_lifetimes)
 	break;
       if (NOTE_LINE_NUMBER (insn) == NOTE_INSN_FUNCTION_BEG)
 	{
