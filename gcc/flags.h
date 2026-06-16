@@ -479,3 +479,10 @@ extern int flag_function_size;
    Lets an agent see whether a particular register's live range crosses an
    edit (helpful for deciding if a `register asm("rN")' is load-bearing). */
 extern int flag_reg_lifetimes;
+
+/* Nonzero: when a literal-pool entry is added in the ARM/Thumb backend,
+   print it to stderr if it looks like an unnamed ROM/IWRAM address.
+   Format: `agbcc-pool-literal: 0x08051FE8 in FOO`.
+   Surfaces candidates for adding `extern T gFoo' + ldscript bindings
+   (the kind of cleanup that collapses cast-cascade expressions). */
+extern int flag_pool_literals;

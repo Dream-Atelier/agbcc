@@ -145,6 +145,40 @@ static pool_node pool_vector[MAX_POOL_SIZE];
 static int pool_size;
 static rtx pool_vector_label;
 
+/* Agent instrumentation: print POOL constant X for FN_NAME if it looks
+   like an unnamed ROM/IWRAM address.  Covers two shapes:
+     1. plain CONST_INT in the 0x02000000..0x09000000 range
+     2. CONST(PLUS(SYMBOL_REF base, CONST_INT offset)) — the `sym + N'
+        pattern the C code produces when no extern exists at the
+        computed address.  */
+static void
+report_pool_literal(rtx x, const char *fn_name)
+{
+    HOST_WIDE_INT val;
+    rtx inner, base, off;
+
+    if (GET_CODE(x) == CONST_INT)
+    {
+        val = INTVAL(x);
+        if (val >= 0x02000000 && val < 0x09000000)
+            fprintf(stderr, "agbcc-pool-literal: 0x%08lx in %s\n",
+                    (unsigned long)val, fn_name);
+        return;
+    }
+    if (GET_CODE(x) == CONST && GET_CODE(XEXP(x, 0)) == PLUS)
+    {
+        inner = XEXP(x, 0);
+        base = XEXP(inner, 0);
+        off = XEXP(inner, 1);
+        if (GET_CODE(base) == SYMBOL_REF && GET_CODE(off) == CONST_INT)
+        {
+            fprintf(stderr, "agbcc-pool-literal: %s+0x%lx in %s\n",
+                    XSTR(base, 0), (unsigned long)INTVAL(off), fn_name);
+            return;
+        }
+    }
+}
+
 /* Add a constant to the pool and return its label.  */
 
 static HOST_WIDE_INT
@@ -188,6 +222,17 @@ add_constant(rtx x, enum machine_mode mode)
     pool_vector[pool_size].value = x;
     pool_vector[pool_size].mode = mode;
     pool_size++;
+
+    /* Agent instrumentation: surface this fresh pool entry if it looks
+       like an unnamed ROM/IWRAM address.  Skipping the dedup branch above
+       avoids reporting the same literal more than once per function.  */
+    if (flag_pool_literals && current_function_decl != 0)
+    {
+        tree name_tree = DECL_ASSEMBLER_NAME(current_function_decl);
+        if (name_tree != 0)
+            report_pool_literal(x, IDENTIFIER_POINTER(name_tree));
+    }
+
     return offset;
 }
 

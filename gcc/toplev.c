@@ -595,6 +595,7 @@ int flag_prologue_bugfix = 0;
 int flag_src_locs = 0;
 int flag_function_size = 0;
 int flag_reg_lifetimes = 0;
+int flag_pool_literals = 0;
 
 typedef struct
 {
@@ -752,6 +753,8 @@ lang_independent_options f_options[] =
      "Print per-function byte size to stderr"},
     {"dump-reg-lifetimes", &flag_reg_lifetimes, 1,
      "Print per-function hard-register live-range source lines to stderr"},
+    {"dump-pool-literals", &flag_pool_literals, 1,
+     "Print literal-pool entries that look like unnamed ROM/IWRAM addresses"},
 };
 
 #define NUM_ELEM(a)  (sizeof (a) / sizeof ((a)[0]))
