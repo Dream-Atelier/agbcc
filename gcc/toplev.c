@@ -591,6 +591,10 @@ int flag_fixed_debug_line_info = 0;
 /* Fix prologue bug in new compiler.  */
 int flag_prologue_bugfix = 0;
 
+/* Agent-oriented instrumentation flags (see flags.h for descriptions).  */
+int flag_src_locs = 0;
+int flag_function_size = 0;
+
 typedef struct
 {
     char *string;
@@ -739,6 +743,12 @@ lang_independent_options f_options[] =
     {"prologue-bugfix", &flag_prologue_bugfix, 1,
      "Prevent unnecessary saving of the lr register to the stack"},
 #endif
+    /* Klonoa-EoD agent-oriented instrumentation.  Diagnostic only, never
+       changes the emitted code bytes.  */
+    {"instrument-src-locs", &flag_src_locs, 1,
+     "Emit `@ src:file:line' asm comments before each insn group"},
+    {"dump-function-size", &flag_function_size, 1,
+     "Print per-function byte size to stderr"},
 };
 
 #define NUM_ELEM(a)  (sizeof (a) / sizeof ((a)[0]))
@@ -1946,8 +1956,12 @@ compile_file(char *name)
     init_tree_codes();
     name = init_parse(name);
     init_rtl();
+    /* Force line notes on when agent src-locs instrumentation is requested,
+       otherwise emit-rtl.c's emit_line_note discards them under no_line_numbers
+       and our `@ src:...` comments never get emitted.  */
     init_emit_once(debug_info_level == DINFO_LEVEL_NORMAL
-                   || debug_info_level == DINFO_LEVEL_VERBOSE);
+                   || debug_info_level == DINFO_LEVEL_VERBOSE
+                   || flag_src_locs);
     init_regs();
     init_decl_processing();
     init_optabs();

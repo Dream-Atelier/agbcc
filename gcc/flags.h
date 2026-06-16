@@ -457,3 +457,18 @@ extern int flag_fixed_debug_line_info;
 
 /* Nonzero if prologue bug should be fixed.  */
 extern int flag_prologue_bugfix;
+
+/* Agent-oriented instrumentation (klonoa-eod fork only) --------------------
+   These flags exist to expose internal compiler decisions to a coding agent
+   that is decompiling/matching code against a target ROM.  They never change
+   emitted code bytes; they only add diagnostic asm comments or stderr lines. */
+
+/* Nonzero: emit `@ src:FILE:LINE` asm comments before each insn group whose
+   RTL came from that source line.  Lets an agent map asm back to C lines
+   without manually counting.  */
+extern int flag_src_locs;
+
+/* Nonzero: print `agbcc-size: function FOO bytes=NNN` to stderr at the end
+   of each function (approximate — counts insn body, excludes epilogue).
+   Lets an agent see the byte delta of an edit before running `make compare`. */
+extern int flag_function_size;

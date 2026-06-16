@@ -1139,6 +1139,20 @@ final_end_function (first, file, optimize)
       app_on = 0;
     }
 
+  /* Agent instrumentation: print the body byte count to stderr so a coding
+     agent can see the byte delta of an edit without running `make compare'.
+     `insn_current_address' is the offset of the last emitted insn from the
+     function entry, so it omits the FUNCTION_EPILOGUE bytes below — the
+     number is an approximation, suitable for comparing two builds of the
+     same function but not for absolute byte accounting.  */
+  if (flag_function_size && current_function_decl != 0)
+    {
+      tree name = DECL_ASSEMBLER_NAME (current_function_decl);
+      if (name != 0)
+	fprintf (stderr, "agbcc-size: %s bytes=%d\n",
+		 IDENTIFIER_POINTER (name), insn_current_address);
+    }
+
 
 #ifdef FUNCTION_EPILOGUE
   /* Finally, output the function epilogue:
@@ -1444,6 +1458,16 @@ final_scan_insn (insn, file, optimize, prescan, nopeepholes)
 	     if it is the first or the last line note in a row.  */
 	  if (!note_after)
 	    output_source_line (file, insn);
+	  /* Agent instrumentation: bypass the suppress-clustered-notes filter
+	     so we get a comment for every distinct C line, not just the last
+	     of each cluster.  The asm comment is harmless to the assembler.  */
+	  else if (flag_src_locs)
+	    {
+	      char *fname = NOTE_SOURCE_FILE (insn);
+	      if (fname)
+		fprintf (file, "\t@ src:%s:%d\n",
+			 fname, NOTE_LINE_NUMBER (insn));
+	    }
 	}
       break;
 
@@ -2070,6 +2094,13 @@ output_source_line (file, insn)
   last_linenum = NOTE_LINE_NUMBER (insn);
   high_block_linenum = MAX (last_linenum, high_block_linenum);
   high_function_linenum = MAX (last_linenum, high_function_linenum);
+
+  /* Agent instrumentation: emit a source-line breadcrumb as an asm comment so
+     a coding agent reading the .s output can map each insn group back to the
+     C line that produced it.  The comment uses `@', the ARM/Thumb line-comment
+     character, so it never affects the assembled bytes.  */
+  if (flag_src_locs && filename)
+    fprintf (file, "\t@ src:%s:%d\n", filename, NOTE_LINE_NUMBER (insn));
 
   if (write_symbols != NO_DEBUG)
     {
