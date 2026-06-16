@@ -109,6 +109,38 @@ static rtx debug_insn = 0;
 /* Line number of last NOTE.  */
 static int last_linenum;
 
+/* Agent instrumentation: per-hard-register first/last source line seen in
+   PATTERN(insn) during emission.  Reset in final_start_function and emitted
+   in final_end_function when flag_reg_lifetimes is on.  -1 = unseen.  */
+static int reg_first_line[FIRST_PSEUDO_REGISTER];
+static int reg_last_line[FIRST_PSEUDO_REGISTER];
+
+/* for_each_rtx callback: when *PX is a hard register, record the current
+   line number (passed via DATA) as a use of that register.  */
+static int
+record_hard_reg_use (px, data)
+     rtx *px;
+     void *data;
+{
+  rtx x = *px;
+  int line;
+  unsigned int regno;
+
+  if (x == 0 || GET_CODE (x) != REG)
+    return 0;
+  regno = REGNO (x);
+  if (regno >= FIRST_PSEUDO_REGISTER)
+    return 0;
+  line = *(int *) data;
+  if (line <= 0)
+    return 0;
+  if (reg_first_line[regno] < 0 || line < reg_first_line[regno])
+    reg_first_line[regno] = line;
+  if (line > reg_last_line[regno])
+    reg_last_line[regno] = line;
+  return 0;
+}
+
 /* Highest line number in current block.  */
 static int high_block_linenum;
 
@@ -1100,6 +1132,17 @@ final_start_function (first, file, optimize)
   block_depth = 0;
   this_is_asm_operands = 0;
 
+  /* Agent instrumentation: reset hard-register live-range tracking.  */
+  if (flag_reg_lifetimes)
+    {
+      int i;
+      for (i = 0; i < FIRST_PSEUDO_REGISTER; i++)
+	{
+	  reg_first_line[i] = -1;
+	  reg_last_line[i] = -1;
+	}
+    }
+
   /* Initial line number is supposed to be output
      before the function's prologue and label
      so that the function's address will not appear to be
@@ -1151,6 +1194,31 @@ final_end_function (first, file, optimize)
       if (name != 0)
 	fprintf (stderr, "agbcc-size: %s bytes=%d\n",
 		 IDENTIFIER_POINTER (name), insn_current_address);
+    }
+
+  /* Agent instrumentation: emit the per-register live-range summary
+     accumulated during final_scan_insn.  Format:
+     `agbcc-reglife: FOO r0=10-15 r4=22-38 ...'.  Registers never used
+     in an emitted insn are omitted.  Line numbers refer to the source
+     file of the function; cross-file lines from inline-expanded macros
+     in headers also count.  */
+  if (flag_reg_lifetimes && current_function_decl != 0)
+    {
+      tree name = DECL_ASSEMBLER_NAME (current_function_decl);
+      if (name != 0)
+	{
+	  int i;
+	  fprintf (stderr, "agbcc-reglife: %s",
+		   IDENTIFIER_POINTER (name));
+	  for (i = 0; i < FIRST_PSEUDO_REGISTER; i++)
+	    {
+	      if (reg_first_line[i] < 0)
+		continue;
+	      fprintf (stderr, " %s=%d-%d", reg_names[i],
+		       reg_first_line[i], reg_last_line[i]);
+	    }
+	  fputc ('\n', stderr);
+	}
     }
 
 
@@ -1585,6 +1653,17 @@ final_scan_insn (insn, file, optimize, prescan, nopeepholes)
 	if (GET_CODE (body) == USE /* These are just declarations */
 	    || GET_CODE (body) == CLOBBER)
 	  break;
+
+	/* Agent instrumentation: walk the insn body and record every
+	   hard-register reference against the current source line.  We
+	   stash the rtx into a plain local because `body' is declared
+	   `register' above and standard C forbids taking its address.  */
+	if (flag_reg_lifetimes)
+	  {
+	    rtx body_addr = body;
+	    int line = last_linenum;
+	    for_each_rtx (&body_addr, record_hard_reg_use, &line);
+	  }
 
 #ifdef HAVE_cc0
 	/* If there is a REG_CC_SETTER note on this insn, it means that

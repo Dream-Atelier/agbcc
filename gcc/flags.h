@@ -472,3 +472,10 @@ extern int flag_src_locs;
    of each function (approximate — counts insn body, excludes epilogue).
    Lets an agent see the byte delta of an edit before running `make compare`. */
 extern int flag_function_size;
+
+/* Nonzero: at the end of each function, print to stderr the first and last
+   source line at which each hard register was used in an emitted insn.
+   Format: `agbcc-reglife: FOO r4=lines 22-38 r5=lines 24-30 ...`.
+   Lets an agent see whether a particular register's live range crosses an
+   edit (helpful for deciding if a `register asm("rN")' is load-bearing). */
+extern int flag_reg_lifetimes;

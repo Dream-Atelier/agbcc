@@ -594,6 +594,7 @@ int flag_prologue_bugfix = 0;
 /* Agent-oriented instrumentation flags (see flags.h for descriptions).  */
 int flag_src_locs = 0;
 int flag_function_size = 0;
+int flag_reg_lifetimes = 0;
 
 typedef struct
 {
@@ -749,6 +750,8 @@ lang_independent_options f_options[] =
      "Emit `@ src:file:line' asm comments before each insn group"},
     {"dump-function-size", &flag_function_size, 1,
      "Print per-function byte size to stderr"},
+    {"dump-reg-lifetimes", &flag_reg_lifetimes, 1,
+     "Print per-function hard-register live-range source lines to stderr"},
 };
 
 #define NUM_ELEM(a)  (sizeof (a) / sizeof ((a)[0]))
@@ -1956,12 +1959,13 @@ compile_file(char *name)
     init_tree_codes();
     name = init_parse(name);
     init_rtl();
-    /* Force line notes on when agent src-locs instrumentation is requested,
-       otherwise emit-rtl.c's emit_line_note discards them under no_line_numbers
-       and our `@ src:...` comments never get emitted.  */
+    /* Force line notes on when agent instrumentation is requested — both
+       -finstrument-src-locs and -fdump-reg-lifetimes need NOTE_LINE_NUMBER
+       to correlate insns with C source lines.  */
     init_emit_once(debug_info_level == DINFO_LEVEL_NORMAL
                    || debug_info_level == DINFO_LEVEL_VERBOSE
-                   || flag_src_locs);
+                   || flag_src_locs
+                   || flag_reg_lifetimes);
     init_regs();
     init_decl_processing();
     init_optabs();

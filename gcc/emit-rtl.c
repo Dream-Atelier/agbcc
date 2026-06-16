@@ -2892,8 +2892,13 @@ emit_note (file, line)
 
   if (line > 0)
     {
+      /* Skip a note for the same file+line as the previous one, except when
+	 the agent reg-lifetime instrumentation is on — there we want every
+	 emitted line note kept so subsequent insn output can correlate to
+	 the C line that produced it.  */
       if (file && last_filename && !strcmp (file, last_filename)
-	  && line == last_linenum)
+	  && line == last_linenum
+	  && !flag_reg_lifetimes)
 	return 0;
       last_filename = file;
       last_linenum = line;
