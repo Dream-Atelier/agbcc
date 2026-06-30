@@ -407,12 +407,10 @@ emit_call_1 (funexp, fndecl, funtype, stack_size, struct_value_size,
       if (valreg)
 	emit_call_insn (gen_call_value (valreg,
 					gen_rtx_MEM (FUNCTION_MODE, funexp),
-					stack_size_rtx, next_arg_reg,
-					NULL_RTX));
+					stack_size_rtx));
       else
 	emit_call_insn (gen_call (gen_rtx_MEM (FUNCTION_MODE, funexp),
-				  stack_size_rtx, next_arg_reg,
-				  struct_value_size_rtx));
+				  stack_size_rtx));
     }
   else
 #endif

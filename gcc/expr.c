@@ -8622,7 +8622,7 @@ expand_builtin_apply(rtx function, rtx arguments, rtx argsize)
 
     emit_call_insn(gen_call_value(valreg,
                                   gen_rtx_MEM(FUNCTION_MODE, function),
-                                  const0_rtx, NULL_RTX, const0_rtx));
+                                  const0_rtx));
 
     emit_move_insn(change_address(result, GET_MODE(valreg),
                                   XEXP(result, 0)),

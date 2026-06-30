@@ -1,0 +1,42 @@
+{
+  "name": "agbcc",
+  "version": "0.1.0",
+  "description": "Compile C to a Game Boy Advance ARM ELF object in the browser, via agbcc (Thumb cc1) and GNU as compiled to WebAssembly.",
+  "license": "GPL-2.0-only",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "prepack": "tsc",
+    "lint": "eslint src/",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Dream-Atelier/agbcc",
+    "directory": "wasm"
+  },
+  "main": "./lib/index.js",
+  "types": "./lib/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./config.json": "./lib/config.json"
+  },
+  "files": [
+    "lib",
+    "dist",
+    "README.md"
+  ],
+  "devDependencies": {
+    "@trivago/prettier-plugin-sort-imports": "^6.0.2",
+    "@typescript-eslint/eslint-plugin": "^8.57.2",
+    "@typescript-eslint/parser": "^8.57.2",
+    "eslint": "^10.1.0",
+    "eslint-plugin-unused-imports": "^4.4.1",
+    "prettier": "^3.8.1",
+    "typescript": "^6.0.2"
+  }
+}
