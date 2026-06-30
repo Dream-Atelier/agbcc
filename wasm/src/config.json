@@ -1,0 +1,6 @@
+{
+  "compiler": "agbcc",
+  "agbccFlags": ["-mthumb-interwork", "-Wimplicit", "-Wparentheses", "-O2", "-fhex-asm", "-fprologue-bugfix"],
+  "asArgs": ["-mcpu=arm7tdmi", "-mthumb-interwork"],
+  "asmTrailer": ".text\n\t.align\t2, 0\n"
+}
