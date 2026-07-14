@@ -1,6 +1,6 @@
 {
   "name": "agbcc",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Compile C to a Game Boy Advance ARM ELF object in the browser, via agbcc (Thumb cc1) and GNU as compiled to WebAssembly.",
   "license": "GPL-2.0-only",
   "type": "module",

@@ -146,3 +146,27 @@ export async function compileToObject(source: string, opts: CompileOptions = {})
 
   return { ok: true, obj: as.FS.readFile('out.o'), asm, stderr: cc.stderr };
 }
+
+export type AssembleResult =
+  { ok: true; obj: Uint8Array; stderr: string } | { ok: false; stderr: string };
+
+/**
+ * Assemble ARM/Thumb assembly text (a complete `.s`, e.g. agbcc's own textual output) to an
+ * ARM ELF .o in the browser, via the bundled GNU `as`. The target-side counterpart to
+ * `compileToObject`: a matching-decompiler harness assembles the reference `.s` here and diffs
+ * it against a candidate `compileToObject` produced from recovered C.
+ *
+ * The `.s` is assembled AS-IS. Unlike `compileToObject`, no `ASM_TRAILER` is appended: a
+ * complete `.s` already carries its own sections, and each function symbol is bounded by an
+ * explicit `.size sym,.Lfe-sym`, so any trailing alignment padding falls outside every symbol
+ * and cannot perturb a per-symbol objdiff. Assembler flags default to `AS_ARGS` — the SAME
+ * flags `compileToObject` uses — so both sides of the diff come from one assembler config.
+ */
+export async function assemble(asm: string, opts: { args?: string[] } = {}): Promise<AssembleResult> {
+  const args = opts.args ?? AS_ARGS;
+  const as = await runStage('as', [...args, 'in.s', '-o', 'out.o'], { 'in.s': asm });
+  if (as.code !== 0) {
+    return { ok: false, stderr: as.stderr || 'assembler failed.' };
+  }
+  return { ok: true, obj: as.FS.readFile('out.o'), stderr: as.stderr };
+}
