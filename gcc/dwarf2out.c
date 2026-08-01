@@ -163,6 +163,12 @@ static unsigned fde_table_in_use;
    unique to each function definition.  */
 static unsigned current_funcdef_number = 0;
 
+/* INSN_UIDs of the source-level labels `final' actually emitted, for the function
+   currently being compiled — see note_emitted_label.  */
+static unsigned *emitted_label_uids;
+static unsigned emitted_label_uids_in_use;
+static unsigned emitted_label_uids_allocated;
+
 /* Some DWARF extensions (e.g., MIPS/SGI) implement a subprogram
    attribute that accelerates the lookup of the FDE associated
    with the subprogram.  This variable holds the table index of the FDE 
@@ -591,6 +597,10 @@ dwarf2out_begin_prologue ()
   register dw_fde_ref fde;
 
   ++current_funcdef_number;
+
+  /* The emitted-label list describes ONE function; start it empty (see
+     note_emitted_label).  */
+  emitted_label_uids_in_use = 0;
 
   function_section (current_function_decl);
   ASM_GENERATE_INTERNAL_LABEL (label, FUNC_BEGIN_LABEL,
@@ -1097,6 +1107,8 @@ static void add_AT_loc			(dw_die_ref,
 					       dw_loc_descr_ref);
 static void add_AT_addr			(dw_die_ref,
 					       enum dwarf_attribute, char *);
+static void note_emitted_label		(unsigned);
+static int label_was_emitted		(unsigned);
 static void add_AT_lbl_id		(dw_die_ref,
 					       enum dwarf_attribute, char *);
 static void add_AT_section_offset	(dw_die_ref,
@@ -3701,6 +3713,14 @@ output_abbrev_section ()
 
       fprintf (asm_out_file, "\t%s\t0,0\n", ASM_BYTE_OP);
     }
+
+  /* Terminate the abbreviation TABLE itself.  The 0,0 above ends one entry's
+     attribute list; DWARF 2 (7.5.3) additionally requires a single 0 byte after the
+     last entry, and without it a conforming reader walks off the end of this unit's
+     table into whatever follows.  Every standard tool rejects the section outright
+     ("`.debug_abbrev' section not zero terminated"), so nothing could read agbcc's
+     DWARF without bespoke recovery.  */
+  fprintf (asm_out_file, "\t%s\t0\n", ASM_BYTE_OP);
 }
 
 /* Output location description stack opcode's operands (if any).  */
@@ -7127,10 +7147,18 @@ gen_label_die (decl, context_die)
 	  if (INSN_DELETED_P (insn))
 	    abort ();
 
-	  sprintf (label2, INSN_LABEL_FMT, current_funcdef_number);
-	  ASM_GENERATE_INTERNAL_LABEL (label, label2,
-				       (unsigned) INSN_UID (insn));
-	  add_AT_lbl_id (lbl_die, DW_AT_low_pc, label);
+	  /* ...and it does happen, without the insn being marked deleted: at -O a
+	     user label whose block was merged away (cross-jumping a `goto' target)
+	     never reaches `final', so no label is emitted for it.  Describing the
+	     label without an address is correct and harmless; pointing at a symbol
+	     that was never defined is not — it fails the link.  */
+	  if (label_was_emitted ((unsigned) INSN_UID (insn)))
+	    {
+	      sprintf (label2, INSN_LABEL_FMT, current_funcdef_number);
+	      ASM_GENERATE_INTERNAL_LABEL (label, label2,
+					   (unsigned) INSN_UID (insn));
+	      add_AT_lbl_id (lbl_die, DW_AT_low_pc, label);
+	    }
 	}
     }
 }
@@ -8150,6 +8178,46 @@ dwarf2out_end_block (blocknum)
   ASM_OUTPUT_INTERNAL_LABEL (asm_out_file, BLOCK_END_LABEL, blocknum);
 }
 
+/* INSN_UIDs of the source-level labels `final' actually emitted, for the function
+   currently being compiled.  A label DIE may only point at a label that exists in the
+   assembly: at -O the optimizer can delete the CODE_LABEL of a user-declared label
+   (cross-jumping merges the block a `goto' targeted), and emitting DW_AT_low_pc for it
+   anyway leaves .debug_info referencing an undefined symbol, which fails the LINK.
+   `final' runs before dwarf2out_decl generates the DIEs (toplev.c rest_of_compilation),
+   so by the time gen_label_die asks, this list is complete.  */
+
+/* Record that a source-level label with INSN_UID `uid' was emitted.  */
+
+static void
+note_emitted_label (uid)
+     register unsigned uid;
+{
+  if (emitted_label_uids_in_use == emitted_label_uids_allocated)
+    {
+      emitted_label_uids_allocated = emitted_label_uids_allocated
+				     ? emitted_label_uids_allocated * 2 : 32;
+      emitted_label_uids = (unsigned *)
+	xrealloc (emitted_label_uids,
+		  emitted_label_uids_allocated * sizeof (unsigned));
+    }
+  emitted_label_uids[emitted_label_uids_in_use++] = uid;
+}
+
+/* Was a source-level label with INSN_UID `uid' emitted for this function?  */
+
+static int
+label_was_emitted (uid)
+     register unsigned uid;
+{
+  register unsigned i;
+
+  for (i = 0; i < emitted_label_uids_in_use; i++)
+    if (emitted_label_uids[i] == uid)
+      return 1;
+
+  return 0;
+}
+
 /* Output a marker (i.e. a label) at a point in the assembly code which
    corresponds to a given source level label.  */
 
@@ -8165,6 +8233,7 @@ dwarf2out_label (insn)
       sprintf (label, INSN_LABEL_FMT, current_funcdef_number);
       ASM_OUTPUT_INTERNAL_LABEL (asm_out_file, label,
 				 (unsigned) INSN_UID (insn));
+      note_emitted_label ((unsigned) INSN_UID (insn));
     }
 }
 
